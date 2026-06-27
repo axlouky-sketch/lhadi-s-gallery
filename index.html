@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lhadi's gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #F1E8C7;
+            background-attachment: fixed;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Balanced, sharp geometric font */
+        .gallery-title {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Tactile, soft cream panels with organic 3D ambient shadow */
+        .cozy-card {
+            background-color: #FAF6E8;
+            border: 1px solid #E5DCB9;
+            box-shadow: 0 10px 25px -5px rgba(139, 150, 85, 0.15), 0 8px 16px -6px rgba(139, 150, 85, 0.15);
+        }
+
+        /* Smooth organic button styles */
+        .cozy-button {
+            background-color: #FAF6E8;
+            border: 2px solid #E5DCB9;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+        }
+        .cozy-button:hover {
+            background-color: #9CA764;
+            color: #FAF6E8;
+            border-color: #9CA764;
+        }
+
+        /* Clean tap highlight overrides for mobile screens */
+        button, div, toggle {
+            -webkit-tap-highlight-color: transparent;
+            outline: none !important;
+        }
+
+        /* Smooth Mobile-Responsive Masonry Cascade Layout */
+        .masonry-grid {
+            column-count: 1;
+            column-gap: 1.5rem;
+        }
+        @media (min-width: 640px) { .masonry-grid { column-count: 2; } }
+        @media (min-width: 768px) { .masonry-grid { column-count: 3; } }
+        
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Custom Matcha scrollbars for dropdowns */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #FAF6E8; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #9CA764; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-stone-800 antialiased min-h-screen flex flex-col items-center p-6 sm:p-12">
+
+    <header class="w-full max-w-5xl mb-12">
+        <h1 class="text-5xl sm:text-6xl text-[#9CA764] tracking-tight font-semibold lowercase gallery-title">
+            lhadi’s gallery
+        </h1>
+        <div class="h-[1px] w-full bg-gradient-to-r from-[#9CA764]/60 via-[#9CA764]/30 to-transparent mt-6 rounded-full"></div>
+    </header>
+
+    <main class="w-full max-w-5xl">
+        <div class="masonry-grid" id="gallery-grid">
+            
+            <div id="upload-card" class="masonry-item h-[220px] cozy-card rounded-2xl hover:scale-[1.02] border-dashed border-2 border-[#9CA764]/40 hover:border-[#9CA764] transition-all duration-300 hidden flex flex-col items-center justify-center cursor-pointer group select-none" onclick="triggerFileInput()">
+                <span class="text-5xl font-normal text-[#9CA764] group-hover:scale-110 transition-all duration-300">+</span>
+                <span class="text-xs font-bold tracking-wider uppercase text-[#9CA764] mt-2">Add Photograph</span>
+                <input type="file" id="file-input" class="hidden" accept="image/*" onchange="handleImageUpload(event)">
+            </div>
+
+        </div>
+    </main>
+
+    <div id="date-picker-modal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="cozy-card w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+            <h3 class="text-2xl text-[#9CA764] mb-1 font-semibold lowercase tracking-tight gallery-title">timestamp assignment</h3>
+            <p class="text-[10px] text-stone-500 uppercase tracking-wider font-bold mb-6">Select the capture date</p>
+            
+            <div class="flex gap-3 mb-6 relative">
+                <div class="flex-1 relative" onclick="event.stopPropagation()">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2 text-center">Day</label>
+                    <div onclick="toggleDropdown('day-options')" id="selected-day" class="w-full cozy-button text-stone-800 p-2.5 rounded-xl font-mono font-bold text-center cursor-pointer select-none transition">01</div>
+                    <ul id="day-options" class="hidden absolute left-0 right-0 mt-1 cozy-card rounded-xl max-h-36 overflow-y-auto custom-scroll z-50 font-mono text-center"></ul>
+                </div>
+
+                <div class="flex-1 relative" onclick="event.stopPropagation()">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2 text-center">Month</label>
+                    <div onclick="toggleDropdown('month-options')" id="selected-month" class="w-full cozy-button text-stone-800 p-2.5 rounded-xl font-mono font-bold text-center cursor-pointer select-none transition">Jan</div>
+                    <ul id="month-options" class="hidden absolute left-0 right-0 mt-1 cozy-card rounded-xl max-h-36 overflow-y-auto custom-scroll z-50 font-mono text-center">
+                        <li onclick="selectMonth('01', 'Jan')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Jan</li>
+                        <li onclick="selectMonth('02', 'Feb')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Feb</li>
+                        <li onclick="selectMonth('03', 'Mar')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Mar</li>
+                        <li onclick="selectMonth('04', 'Apr')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Apr</li>
+                        <li onclick="selectMonth('05', 'May')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">May</li>
+                        <li onclick="selectMonth('06', 'Jun')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Jun</li>
+                        <li onclick="selectMonth('07', 'Jul')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Jul</li>
+                        <li onclick="selectMonth('08', 'Aug')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Aug</li>
+                        <li onclick="selectMonth('09', 'Sep')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Sep</li>
+                        <li onclick="selectMonth('10', 'Oct')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Oct</li>
+                        <li onclick="selectMonth('11', 'Nov')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Nov</li>
+                        <li onclick="selectMonth('12', 'Dec')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">Dec</li>
+                    </ul>
+                </div>
+
+                <div class="flex-1 relative" onclick="event.stopPropagation()">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2 text-center">Year</label>
+                    <div onclick="toggleDropdown('year-options')" id="selected-year" class="w-full cozy-button text-stone-800 p-2.5 rounded-xl font-mono font-bold text-center cursor-pointer select-none transition">2026</div>
+                    <ul id="year-options" class="hidden absolute left-0 right-0 mt-1 cozy-card rounded-xl max-h-36 overflow-y-auto custom-scroll z-50 font-mono text-center"></ul>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-4">
+                <button onclick="cancelDateSelection()" class="flex-1 cozy-button text-stone-500 py-2.5 text-xs font-bold uppercase rounded-xl transition">Cancel</button>
+                <button onclick="confirmDateSelection()" class="flex-1 bg-[#9CA764] text-[#FAF6E8] py-2.5 text-xs font-bold uppercase rounded-xl hover:bg-[#8B9655] transition shadow-md">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="cozy-card w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+            <h3 class="text-2xl text-red-600/90 mb-1 font-semibold lowercase tracking-tight gallery-title">remove photograph</h3>
+            <p class="text-xs text-stone-600 leading-relaxed mb-6">Are you sure you want to permanently delete this memory from your gallery?</p>
+            
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 cozy-button text-stone-500 py-2.5 text-xs font-bold uppercase rounded-xl transition">Keep it</button>
+                <button onclick="executeImageDeletion()" class="flex-1 bg-red-500 text-white py-2.5 text-xs font-bold uppercase rounded-xl hover:bg-red-600 transition shadow-md">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lightbox" class="fixed inset-0 bg-stone-950/90 z-50 hidden flex items-center justify-between p-4 sm:p-12" onclick="closeLightbox()">
+        
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-stone-400 hover:text-white text-4xl font-light transition duration-200 select-none z-50 focus:outline-none">&times;</button>
+        
+        <button onclick="prevImage(event)" class="text-white/40 hover:text-white hover:scale-105 transition duration-200 select-none z-50 p-3 rounded-full hover:bg-white/10 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10 sm:w-14 h-14">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+        </button>
+        
+        <div class="max-w-3xl max-h-[85vh] flex items-center justify-center relative" onclick="event.stopPropagation()">
+            <div class="relative max-w-max max-h-full">
+                <img id="lightbox-img" src="" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)]">
+                <div id="lightbox-date" class="absolute bottom-4 left-4 bg-[#FAF6E8] text-stone-800 border border-[#E5DCB9] px-4 py-1.5 rounded-xl text-xs font-mono font-bold shadow-md"></div>
+            </div>
+        </div>
+        
+        <button onclick="nextImage(event)" class="text-white/40 hover:text-white hover:scale-105 transition duration-200 select-none z-50 p-3 rounded-full hover:bg-white/10 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10 sm:w-14 h-14">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // Netlify Build Configuration Injection Point
+        // This is replaced dynamically upon deployment by Netlify.
+        const IS_ADMIN_BUILD = "" === "edit";
+
+        let uploadedImages = [];
+        let currentIndex = 0;
+        let tempImageSrc = null;
+        let deleteTargetIndex = null;
+
+        let valDay = "01";
+        let valMonth = "06"; 
+        let valYear = "2026";
+
+        const galleryGrid = document.getElementById('gallery-grid');
+        const fileInput = document.getElementById('file-input');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxDate = document.getElementById('lightbox-date');
+        const dateModal = document.getElementById('date-picker-modal');
+        const deleteModal = document.getElementById('delete-confirm-modal');
+        const uploadCard = document.getElementById('upload-card');
+
+        const labelDay = document.getElementById('selected-day');
+        const labelMonth = document.getElementById('selected-month');
+        const labelYear = document.getElementById('selected-year');
+
+        const listDay = document.getElementById('day-options');
+        const listYear = document.getElementById('year-options');
+
+        const monthsMap = {
+            "01":"Jan", "02":"Feb", "03":"Mar", "04":"Apr", "05":"May", "06":"Jun",
+            "07":"Jul", "08":"Aug", "09":"Sep", "10":"Oct", "11":"Nov", "12":"Dec"
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const currentYear = new Date().getFullYear();
+            for(let i = currentYear; i >= 2015; i--) {
+                listYear.innerHTML += `<li onclick="selectYear('${i}')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">${i}</li>`;
+            }
+            updateDaysList();
+            setupInitialView();
+        });
+
+        function setupInitialView() {
+            if (IS_ADMIN_BUILD) {
+                uploadCard.classList.remove('hidden');
+                uploadCard.classList.add('flex');
+            } else {
+                uploadCard.classList.add('hidden');
+                uploadCard.classList.remove('flex');
+            }
+            renderGrid();
+        }
+
+        document.addEventListener('click', () => {
+            closeAllDropdowns();
+        });
+
+        function updateDaysList() {
+            const totalDaysInMonth = new Date(parseInt(valYear), parseInt(valMonth), 0).getDate();
+            
+            listDay.innerHTML = '';
+            for(let i = 1; i <= totalDaysInMonth; i++) {
+                let d = i < 10 ? '0' + i : String(i);
+                listDay.innerHTML += `<li onclick="selectDay('${d}')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">${d}</li>`;
+            }
+
+            if (parseInt(valDay) > totalDaysInMonth) {
+                valDay = String(totalDaysInMonth);
+                labelDay.textContent = valDay;
+            }
+        }
+
+        function toggleDropdown(id) {
+            const target = document.getElementById(id);
+            const isHidden = target.classList.contains('hidden');
+            closeAllDropdowns();
+            if (isHidden) {
+                target.classList.remove('hidden');
+            }
+        }
+
+        function closeAllDropdowns() {
+            document.getElementById('day-options').classList.add('hidden');
+            document.getElementById('month-options').classList.add('hidden');
+            document.getElementById('year-options').classList.add('hidden');
+        }
+
+        function selectDay(day) {
+            valDay = day;
+            labelDay.textContent = day;
+            closeAllDropdowns();
+        }
+
+        function selectMonth(num, label) {
+            valMonth = num;
+            labelMonth.textContent = label;
+            closeAllDropdowns();
+            updateDaysList();
+        }
+
+        function selectYear(year) {
+            valYear = year;
+            labelYear.textContent = year;
+            closeAllDropdowns();
+            updateDaysList();
+        }
+
+        function triggerFileInput() {
+            if(!IS_ADMIN_BUILD) return;
+            fileInput.click();
+        }
+
+        function handleImageUpload(event) {
+            if(!IS_ADMIN_BUILD) return;
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempImageSrc = e.target.result;
+                    openDatePicker();
+                }
+                reader.readAsDataURL(file);
+            }
+            fileInput.value = '';
+        }
+
+        function openDatePicker() {
+            const today = new Date();
+            valYear = String(today.getFullYear());
+            valMonth = String(today.getMonth() + 1).padStart(2, '0');
+            valDay = String(today.getDate()).padStart(2, '0');
+
+            labelYear.textContent = valYear;
+            labelMonth.textContent = monthsMap[valMonth];
+            labelDay.textContent = valDay;
+
+            updateDaysList();
+            dateModal.classList.remove('hidden');
+        }
+
+        function cancelDateSelection() {
+            dateModal.classList.add('hidden');
+            tempImageSrc = null;
+        }
+
+        function confirmDateSelection() {
+            if(!IS_ADMIN_BUILD) return;
+            const formattedDate = `${valDay}/${valMonth}/${valYear}`;
+            uploadedImages.push({ src: tempImageSrc, date: formattedDate });
+            dateModal.classList.add('hidden');
+            tempImageSrc = null;
+            renderGrid();
+        }
+
+        function renderGrid() {
+            galleryGrid.innerHTML = '';
+            if (IS_ADMIN_BUILD) {
+                galleryGrid.appendChild(uploadCard);
+            }
+
+            uploadedImages.forEach((photo, index) => {
+                const card = document.createElement('div');
+                card.className = "masonry-item cozy-card p-0 rounded-2xl cursor-pointer group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_20px_35px_-5px_rgba(139,150,85,0.25)] display-inline-block w-full";
+                card.setAttribute('onclick', `openLightbox(${index})`);
+                
+                const deleteButtonMarkup = IS_ADMIN_BUILD ? `
+                    <button onclick="removeImage(event, ${index})" class="absolute top-5 right-5 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all duration-300 shadow-md">
+                        &times;
+                    </button>
+                ` : '';
+
+                card.innerHTML = `
+                    <img src="${photo.src}" class="w-full h-auto object-contain">
+                    <div class="absolute bottom-5 left-5 bg-[#FAF6E8]/90 px-3 py-1 rounded-xl border border-[#E5DCB9] text-stone-800 text-xs font-mono font-bold tracking-wide shadow-sm">
+                        ${photo.date}
+                    </div>
+                    ${deleteButtonMarkup}
+                `;
+                galleryGrid.appendChild(card);
+            });
+        }
+
+        function removeImage(event, index) {
+            event.stopPropagation();
+            if(!IS_ADMIN_BUILD) return;
+            deleteTargetIndex = index;
+            deleteModal.classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.add('hidden');
+            deleteTargetIndex = null;
+        }
+
+        function executeImageDeletion() {
+            if (deleteTargetIndex !== null && IS_ADMIN_BUILD) {
+                uploadedImages.splice(deleteTargetIndex, 1);
+                renderGrid();
+            }
+            closeDeleteModal();
+        }
+
+        function openLightbox(index) {
+            if (uploadedImages.length === 0) return;
+            currentIndex = index;
+            updateLightbox();
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightbox.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function updateLightbox() {
+            lightboxImg.src = uploadedImages[currentIndex].src;
+            lightboxDate.textContent = uploadedImages[currentIndex].date;
+        }
+
+        function nextImage(event) {
+            event.stopPropagation();
+            currentIndex = (currentIndex + 1) % uploadedImages.length;
+            updateLightbox();
+        }
+
+        function prevImage(event) {
+            event.stopPropagation();
+            currentIndex = (currentIndex - 1 + uploadedImages.length) % uploadedImages.length;
+            updateLightbox();
+        }
+    </script>
+</body>
+</html>
