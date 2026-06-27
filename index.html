@@ -6,6 +6,8 @@
     <title>lhadi's gallery</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Clean, Balanced Geometric Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,19 +20,16 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        /* Balanced, sharp geometric font */
         .gallery-title {
             font-family: 'Outfit', sans-serif;
         }
 
-        /* Tactile, soft cream panels with organic 3D ambient shadow */
         .cozy-card {
             background-color: #FAF6E8;
             border: 1px solid #E5DCB9;
             box-shadow: 0 10px 25px -5px rgba(139, 150, 85, 0.15), 0 8px 16px -6px rgba(139, 150, 85, 0.15);
         }
 
-        /* Smooth organic button styles */
         .cozy-button {
             background-color: #FAF6E8;
             border: 2px solid #E5DCB9;
@@ -42,13 +41,11 @@
             border-color: #9CA764;
         }
 
-        /* Clean tap highlight overrides for mobile screens */
         button, div, toggle {
             -webkit-tap-highlight-color: transparent;
             outline: none !important;
         }
 
-        /* Smooth Mobile-Responsive Masonry Cascade Layout */
         .masonry-grid {
             column-count: 1;
             column-gap: 1.5rem;
@@ -61,7 +58,6 @@
             margin-bottom: 1.5rem;
         }
 
-        /* Custom Matcha scrollbars for dropdowns */
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: #FAF6E8; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #9CA764; border-radius: 10px; }
@@ -77,11 +73,16 @@
         <div class="h-[1px] w-full bg-gradient-to-r from-[#9CA764]/60 via-[#9CA764]/30 to-transparent mt-6 rounded-full"></div>
     </header>
 
+    <!-- LOADING SPINNER -->
+    <div id="loading-indicator" class="text-stone-500 font-mono text-xs uppercase tracking-widest my-8 hidden">
+        connecting to gallery vault...
+    </div>
+
     <!-- MAIN INTERFACE Grid -->
     <main class="w-full max-w-5xl">
         <div class="masonry-grid" id="gallery-grid">
             
-            <!-- COZY UPLOAD CARD (Controlled strictly via environment variable) -->
+            <!-- COZY UPLOAD CARD -->
             <div id="upload-card" class="masonry-item h-[220px] cozy-card rounded-2xl hover:scale-[1.02] border-dashed border-2 border-[#9CA764]/40 hover:border-[#9CA764] transition-all duration-300 hidden flex flex-col items-center justify-center cursor-pointer group select-none" onclick="triggerFileInput()">
                 <span class="text-5xl font-normal text-[#9CA764] group-hover:scale-110 transition-all duration-300">+</span>
                 <span class="text-xs font-bold tracking-wider uppercase text-[#9CA764] mt-2">Add Photograph</span>
@@ -98,14 +99,12 @@
             <p class="text-[10px] text-stone-500 uppercase tracking-wider font-bold mb-6">Select the capture date</p>
             
             <div class="flex gap-3 mb-6 relative">
-                <!-- SLOT 1: Day -->
                 <div class="flex-1 relative" onclick="event.stopPropagation()">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2 text-center">Day</label>
                     <div onclick="toggleDropdown('day-options')" id="selected-day" class="w-full cozy-button text-stone-800 p-2.5 rounded-xl font-mono font-bold text-center cursor-pointer select-none transition">01</div>
                     <ul id="day-options" class="hidden absolute left-0 right-0 mt-1 cozy-card rounded-xl max-h-36 overflow-y-auto custom-scroll z-50 font-mono text-center"></ul>
                 </div>
 
-                <!-- SLOT 2: Month -->
                 <div class="flex-1 relative" onclick="event.stopPropagation()">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2 text-center">Month</label>
                     <div onclick="toggleDropdown('month-options')" id="selected-month" class="w-full cozy-button text-stone-800 p-2.5 rounded-xl font-mono font-bold text-center cursor-pointer select-none transition">Jan</div>
@@ -125,7 +124,6 @@
                     </ul>
                 </div>
 
-                <!-- SLOT 3: Year -->
                 <div class="flex-1 relative" onclick="event.stopPropagation()">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2 text-center">Year</label>
                     <div onclick="toggleDropdown('year-options')" id="selected-year" class="w-full cozy-button text-stone-800 p-2.5 rounded-xl font-mono font-bold text-center cursor-pointer select-none transition">2026</div>
@@ -135,7 +133,7 @@
 
             <div class="flex gap-3 mt-4">
                 <button onclick="cancelDateSelection()" class="flex-1 cozy-button text-stone-500 py-2.5 text-xs font-bold uppercase rounded-xl transition">Cancel</button>
-                <button onclick="confirmDateSelection()" class="flex-1 bg-[#9CA764] text-[#FAF6E8] py-2.5 text-xs font-bold uppercase rounded-xl hover:bg-[#8B9655] transition shadow-md">Confirm</button>
+                <button id="confirm-upload-btn" onclick="confirmDateSelection()" class="flex-1 bg-[#9CA764] text-[#FAF6E8] py-2.5 text-xs font-bold uppercase rounded-xl hover:bg-[#8B9655] transition shadow-md">Confirm</button>
             </div>
         </div>
     </div>
@@ -148,45 +146,43 @@
             
             <div class="flex gap-3">
                 <button onclick="closeDeleteModal()" class="flex-1 cozy-button text-stone-500 py-2.5 text-xs font-bold uppercase rounded-xl transition">Keep it</button>
-                <button onclick="executeImageDeletion()" class="flex-1 bg-red-500 text-white py-2.5 text-xs font-bold uppercase rounded-xl hover:bg-red-600 transition shadow-md">Delete</button>
+                <button id="confirm-delete-btn" onclick="executeImageDeletion()" class="flex-1 bg-red-500 text-white py-2.5 text-xs font-bold uppercase rounded-xl hover:bg-red-600 transition shadow-md">Delete</button>
             </div>
         </div>
     </div>
 
-    <!-- CLEAN COZY LIGHTBOX OVERLAY -->
+    <!-- LIGHTBOX OVERLAY -->
     <div id="lightbox" class="fixed inset-0 bg-stone-950/90 z-50 hidden flex items-center justify-between p-4 sm:p-12" onclick="closeLightbox()">
-        
         <button onclick="closeLightbox()" class="absolute top-6 right-6 text-stone-400 hover:text-white text-4xl font-light transition duration-200 select-none z-50 focus:outline-none">&times;</button>
-        
         <button onclick="prevImage(event)" class="text-white/40 hover:text-white hover:scale-105 transition duration-200 select-none z-50 p-3 rounded-full hover:bg-white/10 focus:outline-none">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10 sm:w-14 h-14">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10 sm:w-14 h-14"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
-        
         <div class="max-w-3xl max-h-[85vh] flex items-center justify-center relative" onclick="event.stopPropagation()">
             <div class="relative max-w-max max-h-full">
                 <img id="lightbox-img" src="" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)]">
                 <div id="lightbox-date" class="absolute bottom-4 left-4 bg-[#FAF6E8] text-stone-800 border border-[#E5DCB9] px-4 py-1.5 rounded-xl text-xs font-mono font-bold shadow-md"></div>
             </div>
         </div>
-        
         <button onclick="nextImage(event)" class="text-white/40 hover:text-white hover:scale-105 transition duration-200 select-none z-50 p-3 rounded-full hover:bg-white/10 focus:outline-none">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10 sm:w-14 h-14">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10 sm:w-14 h-14"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
         </button>
     </div>
 
     <!-- JAVASCRIPT ENGINE -->
     <script>
-        // The magic Netlify switch line:
+        // Magic Netlify Switch
         const IS_ADMIN_BUILD = "<!--REPLACE_MODE-->" === "edit";
+
+        // CONNECT TO YOUR SUPABASE DATABASE
+        const SUPABASE_URL = "https://xfudowvfsybcuowvrhxa.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_NbDQEkBNwkBG7VzEPmx85g_d0rbzbzN";
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let uploadedImages = [];
         let currentIndex = 0;
-        let tempImageSrc = null;
-        let deleteTargetIndex = null;
+        let selectedFileFile = null;
+        let deleteTargetId = null;
 
         let valDay = "01";
         let valMonth = "06"; 
@@ -200,11 +196,11 @@
         const dateModal = document.getElementById('date-picker-modal');
         const deleteModal = document.getElementById('delete-confirm-modal');
         const uploadCard = document.getElementById('upload-card');
+        const loadingIndicator = document.getElementById('loading-indicator');
 
         const labelDay = document.getElementById('selected-day');
         const labelMonth = document.getElementById('selected-month');
         const labelYear = document.getElementById('selected-year');
-
         const listDay = document.getElementById('day-options');
         const listYear = document.getElementById('year-options');
 
@@ -213,13 +209,14 @@
             "07":"Jul", "08":"Aug", "09":"Sep", "10":"Oct", "11":"Nov", "12":"Dec"
         };
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             const currentYear = new Date().getFullYear();
             for(let i = currentYear; i >= 2015; i--) {
                 listYear.innerHTML += `<li onclick="selectYear('${i}')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">${i}</li>`;
             }
             updateDaysList();
             setupInitialView();
+            await fetchImagesFromDatabase();
         });
 
         function setupInitialView() {
@@ -230,22 +227,31 @@
                 uploadCard.classList.add('hidden');
                 uploadCard.classList.remove('flex');
             }
-            renderGrid();
         }
 
-        document.addEventListener('click', () => {
-            closeAllDropdowns();
-        });
+        async function fetchImagesFromDatabase() {
+            loadingIndicator.classList.remove('hidden');
+            const { data, error } = await supabaseClient
+                .from('images')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (!error && data) {
+                uploadedImages = data;
+                renderGrid();
+            }
+            loadingIndicator.classList.add('hidden');
+        }
+
+        document.addEventListener('click', () => closeAllDropdowns());
 
         function updateDaysList() {
             const totalDaysInMonth = new Date(parseInt(valYear), parseInt(valMonth), 0).getDate();
-            
             listDay.innerHTML = '';
             for(let i = 1; i <= totalDaysInMonth; i++) {
                 let d = i < 10 ? '0' + i : String(i);
                 listDay.innerHTML += `<li onclick="selectDay('${d}')" class="p-2 hover:bg-[#9CA764] hover:text-[#FAF6E8] cursor-pointer rounded-lg m-1 transition">${d}</li>`;
             }
-
             if (parseInt(valDay) > totalDaysInMonth) {
                 valDay = String(totalDaysInMonth);
                 labelDay.textContent = valDay;
@@ -256,9 +262,7 @@
             const target = document.getElementById(id);
             const isHidden = target.classList.contains('hidden');
             closeAllDropdowns();
-            if (isHidden) {
-                target.classList.remove('hidden');
-            }
+            if (isHidden) target.classList.remove('hidden');
         }
 
         function closeAllDropdowns() {
@@ -267,41 +271,18 @@
             document.getElementById('year-options').classList.add('hidden');
         }
 
-        function selectDay(day) {
-            valDay = day;
-            labelDay.textContent = day;
-            closeAllDropdowns();
-        }
+        function selectDay(day) { valDay = day; labelDay.textContent = day; closeAllDropdowns(); }
+        function selectMonth(num, label) { valMonth = num; labelMonth.textContent = label; closeAllDropdowns(); updateDaysList(); }
+        function selectYear(year) { valYear = year; labelYear.textContent = year; closeAllDropdowns(); updateDaysList(); }
 
-        function selectMonth(num, label) {
-            valMonth = num;
-            labelMonth.textContent = label;
-            closeAllDropdowns();
-            updateDaysList();
-        }
-
-        function selectYear(year) {
-            valYear = year;
-            labelYear.textContent = year;
-            closeAllDropdowns();
-            updateDaysList();
-        }
-
-        function triggerFileInput() {
-            if(!IS_ADMIN_BUILD) return;
-            fileInput.click();
-        }
+        function triggerFileInput() { if(!IS_ADMIN_BUILD) return; fileInput.click(); }
 
         function handleImageUpload(event) {
             if(!IS_ADMIN_BUILD) return;
             const file = event.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    tempImageSrc = e.target.result;
-                    openDatePicker();
-                }
-                reader.readAsDataURL(file);
+                selectedFileFile = file;
+                openDatePicker();
             }
             fileInput.value = '';
         }
@@ -311,34 +292,66 @@
             valYear = String(today.getFullYear());
             valMonth = String(today.getMonth() + 1).padStart(2, '0');
             valDay = String(today.getDate()).padStart(2, '0');
-
             labelYear.textContent = valYear;
             labelMonth.textContent = monthsMap[valMonth];
             labelDay.textContent = valDay;
-
             updateDaysList();
             dateModal.classList.remove('hidden');
         }
 
-        function cancelDateSelection() {
-            dateModal.classList.add('hidden');
-            tempImageSrc = null;
-        }
+        function cancelDateSelection() { dateModal.classList.add('hidden'); selectedFileFile = null; }
 
-        function confirmDateSelection() {
-            if(!IS_ADMIN_BUILD) return;
+        async function confirmDateSelection() {
+            if(!IS_ADMIN_BUILD || !selectedFileFile) return;
+            
+            const btn = document.getElementById('confirm-upload-btn');
+            btn.disabled = true;
+            btn.textContent = "Uploading...";
+
+            const fileExt = selectedFileFile.name.split('.').pop();
+            const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // 1. Upload file to Supabase Cloud Storage
+            const { error: uploadError } = await supabaseClient.storage
+                .from('photos')
+                .upload(filePath, selectedFileFile);
+
+            if (uploadError) {
+                alert("Storage Upload Error: " + uploadError.message);
+                btn.disabled = false;
+                btn.textContent = "Confirm";
+                return;
+            }
+
+            // 2. Grab Public URL of the image
+            const { data: urlData } = supabaseClient.storage
+                .from('photos')
+                .getPublicUrl(filePath);
+
+            const publicUrl = urlData.publicUrl;
             const formattedDate = `${valDay}/${valMonth}/${valYear}`;
-            uploadedImages.push({ src: tempImageSrc, date: formattedDate });
+
+            // 3. Save URL and Date row to database table
+            const { error: dbError } = await supabaseClient
+                .from('images')
+                .insert([{ url: publicUrl, date: formattedDate }]);
+
+            if (dbError) {
+                alert("Database Save Error: " + dbError.message);
+            } else {
+                await fetchImagesFromDatabase();
+            }
+
+            btn.disabled = false;
+            btn.textContent = "Confirm";
             dateModal.classList.add('hidden');
-            tempImageSrc = null;
-            renderGrid();
+            selectedFileFile = null;
         }
 
         function renderGrid() {
             galleryGrid.innerHTML = '';
-            if (IS_ADMIN_BUILD) {
-                galleryGrid.appendChild(uploadCard);
-            }
+            if (IS_ADMIN_BUILD) galleryGrid.appendChild(uploadCard);
 
             uploadedImages.forEach((photo, index) => {
                 const card = document.createElement('div');
@@ -346,13 +359,13 @@
                 card.setAttribute('onclick', `openLightbox(${index})`);
                 
                 const deleteButtonMarkup = IS_ADMIN_BUILD ? `
-                    <button onclick="removeImage(event, ${index})" class="absolute top-5 right-5 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all duration-300 shadow-md">
+                    <button onclick="removeImage(event, '${photo.id}')" class="absolute top-5 right-5 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all duration-300 shadow-md">
                         &times;
                     </button>
                 ` : '';
 
                 card.innerHTML = `
-                    <img src="${photo.src}" class="w-full h-auto object-contain">
+                    <img src="${photo.url}" class="w-full h-auto object-contain">
                     <div class="absolute bottom-5 left-5 bg-[#FAF6E8]/90 px-3 py-1 rounded-xl border border-[#E5DCB9] text-stone-800 text-xs font-mono font-bold tracking-wide shadow-sm">
                         ${photo.date}
                     </div>
@@ -362,22 +375,33 @@
             });
         }
 
-        function removeImage(event, index) {
+        function removeImage(event, id) {
             event.stopPropagation();
             if(!IS_ADMIN_BUILD) return;
-            deleteTargetIndex = index;
+            deleteTargetId = id;
             deleteModal.classList.remove('hidden');
         }
 
-        function closeDeleteModal() {
-            deleteModal.classList.add('hidden');
-            deleteTargetIndex = null;
-        }
+        function closeDeleteModal() { deleteModal.classList.add('hidden'); deleteTargetId = null; }
 
-        function executeImageDeletion() {
-            if (deleteTargetIndex !== null && IS_ADMIN_BUILD) {
-                uploadedImages.splice(deleteTargetIndex, 1);
-                renderGrid();
+        async function executeImageDeletion() {
+            if (deleteTargetId !== null && IS_ADMIN_BUILD) {
+                const btn = document.getElementById('confirm-delete-btn');
+                btn.disabled = true;
+                btn.textContent = "Deleting...";
+
+                const { error } = await supabaseClient
+                    .from('images')
+                    .delete()
+                    .eq('id', deleteTargetId);
+
+                if (error) {
+                    alert("Delete error: " + error.message);
+                } else {
+                    await fetchImagesFromDatabase();
+                }
+                btn.disabled = false;
+                btn.textContent = "Delete";
             }
             closeDeleteModal();
         }
@@ -390,27 +414,10 @@
             document.body.style.overflow = 'hidden';
         }
 
-        function closeLightbox() {
-            lightbox.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        }
-
-        function updateLightbox() {
-            lightboxImg.src = uploadedImages[currentIndex].src;
-            lightboxDate.textContent = uploadedImages[currentIndex].date;
-        }
-
-        function nextImage(event) {
-            event.stopPropagation();
-            currentIndex = (currentIndex + 1) % uploadedImages.length;
-            updateLightbox();
-        }
-
-        function prevImage(event) {
-            event.stopPropagation();
-            currentIndex = (currentIndex - 1 + uploadedImages.length) % uploadedImages.length;
-            updateLightbox();
-        }
+        function closeLightbox() { lightbox.classList.add('hidden'); document.body.style.overflow = 'auto'; }
+        function updateLightbox() { lightboxImg.src = uploadedImages[currentIndex].url; lightboxDate.textContent = uploadedImages[currentIndex].date; }
+        function nextImage(event) { event.stopPropagation(); currentIndex = (currentIndex + 1) % uploadedImages.length; updateLightbox(); }
+        function prevImage(event) { event.stopPropagation(); currentIndex = (currentIndex - 1 + uploadedImages.length) % uploadedImages.length; updateLightbox(); }
     </script>
 </body>
 </html>
