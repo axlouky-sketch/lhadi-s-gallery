@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>lhadi's gallery</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Clean, Balanced Geometric Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -67,6 +69,7 @@
 </head>
 <body class="text-stone-800 antialiased min-h-screen flex flex-col items-center p-6 sm:p-12">
 
+    <!-- HEADER / BRANDING -->
     <header class="w-full max-w-5xl mb-12">
         <h1 class="text-5xl sm:text-6xl text-[#9CA764] tracking-tight font-semibold lowercase gallery-title">
             lhadi’s gallery
@@ -74,9 +77,11 @@
         <div class="h-[1px] w-full bg-gradient-to-r from-[#9CA764]/60 via-[#9CA764]/30 to-transparent mt-6 rounded-full"></div>
     </header>
 
+    <!-- MAIN INTERFACE Grid -->
     <main class="w-full max-w-5xl">
         <div class="masonry-grid" id="gallery-grid">
             
+            <!-- COZY UPLOAD CARD (Controlled strictly via environment variable) -->
             <div id="upload-card" class="masonry-item h-[220px] cozy-card rounded-2xl hover:scale-[1.02] border-dashed border-2 border-[#9CA764]/40 hover:border-[#9CA764] transition-all duration-300 hidden flex flex-col items-center justify-center cursor-pointer group select-none" onclick="triggerFileInput()">
                 <span class="text-5xl font-normal text-[#9CA764] group-hover:scale-110 transition-all duration-300">+</span>
                 <span class="text-xs font-bold tracking-wider uppercase text-[#9CA764] mt-2">Add Photograph</span>
@@ -86,18 +91,21 @@
         </div>
     </main>
 
+    <!-- COZY THEMED DATE PICKER MODAL -->
     <div id="date-picker-modal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="cozy-card w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h3 class="text-2xl text-[#9CA764] mb-1 font-semibold lowercase tracking-tight gallery-title">timestamp assignment</h3>
             <p class="text-[10px] text-stone-500 uppercase tracking-wider font-bold mb-6">Select the capture date</p>
             
             <div class="flex gap-3 mb-6 relative">
+                <!-- SLOT 1: Day -->
                 <div class="flex-1 relative" onclick="event.stopPropagation()">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2 text-center">Day</label>
                     <div onclick="toggleDropdown('day-options')" id="selected-day" class="w-full cozy-button text-stone-800 p-2.5 rounded-xl font-mono font-bold text-center cursor-pointer select-none transition">01</div>
                     <ul id="day-options" class="hidden absolute left-0 right-0 mt-1 cozy-card rounded-xl max-h-36 overflow-y-auto custom-scroll z-50 font-mono text-center"></ul>
                 </div>
 
+                <!-- SLOT 2: Month -->
                 <div class="flex-1 relative" onclick="event.stopPropagation()">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2 text-center">Month</label>
                     <div onclick="toggleDropdown('month-options')" id="selected-month" class="w-full cozy-button text-stone-800 p-2.5 rounded-xl font-mono font-bold text-center cursor-pointer select-none transition">Jan</div>
@@ -117,6 +125,7 @@
                     </ul>
                 </div>
 
+                <!-- SLOT 3: Year -->
                 <div class="flex-1 relative" onclick="event.stopPropagation()">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2 text-center">Year</label>
                     <div onclick="toggleDropdown('year-options')" id="selected-year" class="w-full cozy-button text-stone-800 p-2.5 rounded-xl font-mono font-bold text-center cursor-pointer select-none transition">2026</div>
@@ -131,6 +140,7 @@
         </div>
     </div>
 
+    <!-- COZY DELETE CONFIRMATION MODAL -->
     <div id="delete-confirm-modal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="cozy-card w-full max-w-sm rounded-2xl p-6 shadow-2xl">
             <h3 class="text-2xl text-red-600/90 mb-1 font-semibold lowercase tracking-tight gallery-title">remove photograph</h3>
@@ -143,6 +153,7 @@
         </div>
     </div>
 
+    <!-- CLEAN COZY LIGHTBOX OVERLAY -->
     <div id="lightbox" class="fixed inset-0 bg-stone-950/90 z-50 hidden flex items-center justify-between p-4 sm:p-12" onclick="closeLightbox()">
         
         <button onclick="closeLightbox()" class="absolute top-6 right-6 text-stone-400 hover:text-white text-4xl font-light transition duration-200 select-none z-50 focus:outline-none">&times;</button>
@@ -167,10 +178,10 @@
         </button>
     </div>
 
+    <!-- JAVASCRIPT ENGINE -->
     <script>
-        // Netlify Build Configuration Injection Point
-        // This is replaced dynamically upon deployment by Netlify.
-        const IS_ADMIN_BUILD = "" === "edit";
+        // The magic Netlify switch line:
+        const IS_ADMIN_BUILD = "<!--REPLACE_MODE-->" === "edit";
 
         let uploadedImages = [];
         let currentIndex = 0;
